@@ -10,7 +10,7 @@ from matplotlib import cm
 # ============================================================================
 
 
-mat_phi = scipy.io.loadmat('phi_grid_matrix.mat')  # data est un dictionnaire
+mat_phi = scipy.io.loadmat('phi_grid_matrix.mat')  # data is a dictionnary
 mat_theta = scipy.io.loadmat('theta_grid_matrix.mat')
 mat_TE = scipy.io.loadmat('S12_grid_matrix_TE.mat')
 mat_TM = scipy.io.loadmat('S12_grid_matrix_TM.mat')
@@ -24,15 +24,15 @@ data_TM = mat_TM.get("S12_grid_matrix_TM")
 # Polarisation ---------------------------------------------------------------
 # ============================================================================
 
+P = data_TE**2 + data_TM **2
+#np.where(P == np.amax(P)))
+y = -data_TE[16][17]
+x = data_TM[16][17]
 
-
-TE_max = data_TE.max()
-TM_max = data_TM.max()
-print("valeur max TE:", TE_max)
-print("valeur max TM:", TM_max)
-print(" --> Polarisation : RHCP")
-#print(np.abs(TE_max -1j*TM_max)) # /racine 2
-#print(np.abs(TE_max +1j*TM_max)) # /racine 2
+e_g = x - 1j * y
+e_d = x + 1j * y
+print(abs(e_g))
+print(abs(e_d))
 
 
 # Plot in 2D -----------------------------------------------------------------
