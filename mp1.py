@@ -24,13 +24,23 @@ data_TM = mat_TM.get("S12_grid_matrix_TM")
 # Polarisation ---------------------------------------------------------------
 # ============================================================================
 
+""" Quelle calcul de norme choisir ???
+    (1) donne encore des nbrs complexes donc marche pas
+    (2) et (3) donne RHCP mais pas le mm graphe de directivité ...
+"""
 #E_square_norm = data_TE**2 + data_TM **2
 E_square_norm = abs(data_TE)**2 + abs(data_TM)**2
-#np.where(P == np.amax(P)))  -> gives 16 and 17
-y_ = -data_TE[16][17]   # -> y_ = ê_phi
-x_ = data_TM[16][17]    # -> x_ = ê_theta
+#E_square_norm = abs(data_TE**2 + data_TM**2)
 
-E_g = x_ - 1j * y_
+
+idx = np.where(E_square_norm == np.amax(E_square_norm))
+idx_l = idx[0][0]
+idx_c = idx[1][0] 
+print("posisition max :",idx_l,";",idx_c)
+y_ = -data_TE[idx_l][idx_c]   # -> y_ = ê_phi
+x_ = data_TM[idx_l][idx_c]    # -> x_ = ê_theta
+
+E_g = x_ - 1j * y_  # manque le facteur racine(2) !
 E_d = x_ + 1j * y_
 
 if (abs(E_g) > abs(E_d)) :  # on choisit la polarisation dominante
@@ -42,8 +52,10 @@ print("E_d =", E_d)
 print(bla)
 print()
 
+
 # Directivity ----------------------------------------------------------------
 # ============================================================================
+
 
 # Il faut |F|², mais |E|² et |F|² sont = à une constante près
 
@@ -57,8 +69,10 @@ for i in range(len(data_phi)):
     for j in range(len(data_phi[0])):
         integrale_E += E_square_norm[i][j] * Jac[i][j] * d_phi * d_theta
         
-print(integrale_E)        
+print("valeur intégrale:",integrale_E)        
 D = 4 * np.pi * E_square_norm / integrale_E
+
+
 
 
 # exemple rieman pour intégrer surface sphère :
@@ -75,8 +89,25 @@ def Riemann_surf_sph():
         
 
 
-# Plot in 2D -----------------------------------------------------------------
+# Plot in 3D -----------------------------------------------------------------
 # ============================================================================
+
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(data_phi, data_theta, D,rstride=1, cstride=1)
+plt.title("Directivity versus theta - phi")
+
+
+
+
+
+
+
+
+
+
+
+
 
 #plt.figure()
 #plt.imshow(np.abs(data_TE)) #,extent=(0, 2*np.pi, 2*np.pi/2, 0)
@@ -85,14 +116,14 @@ def Riemann_surf_sph():
 #plt.imshow(np.abs(data_TM))
 #plt.title("S12 TM")
 
-fig = plt.figure()
-ax = fig.add_subplot(111,projection='3d')
+#fig = plt.figure()
+#ax = fig.add_subplot(111,projection='3d')
 #color_map = cm.RdYlBu_r
 #calarMap = cm.ScalarMappable(norm=Normalize(vmin=0, vmax=1), cmap=color_map)
 #C_colored = scalarMap.to_rgba(np.abs(data_TE))
-surf = ax.plot_surface(data_phi, data_theta, D,rstride=1, cstride=1)
+#surf = ax.plot_surface(data_phi, data_theta, np.abs(data_TE),rstride=1, cstride=1)
 #plt.title("S12 TE")
 #fig = plt.figure()
 #ax = fig.add_subplot(111,projection='3d')
 #surf = ax.plot_surface(data_phi, data_theta, np.abs(data_TM),rstride=1, cstride=1)
-#plt.title("12 TM")
+#plt.title("S12 TM")
