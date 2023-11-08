@@ -24,15 +24,28 @@ data_TM = mat_TM.get("S12_grid_matrix_TM")
 # Polarisation ---------------------------------------------------------------
 # ============================================================================
 
-P = data_TE**2 + data_TM **2
-#np.where(P == np.amax(P)))
-y = -data_TE[16][17]
-x = data_TM[16][17]
+E_square_norm = data_TE**2 + data_TM **2
+#np.where(P == np.amax(P)))  -> gives 16 and 17
+y_ = -data_TE[16][17]
+x_ = data_TM[16][17]
 
-e_g = x - 1j * y
-e_d = x + 1j * y
-print(abs(e_g))
-print(abs(e_d))
+E_g = x_ - 1j * y_
+E_d = x_ + 1j * y_
+
+if (E_g > E_d) :
+    bla = "--> polarisation LHCP"
+else :
+    bla = "--> polarisation RCHP"
+print("E_g =", E_g)
+print("E_d =", E_d)
+print(bla)
+
+
+# Directivity ----------------------------------------------------------------
+# ============================================================================
+
+integrale_F = ...
+D = 4 * np.pi * E_square_norm / integrale_F
 
 
 # Plot in 2D -----------------------------------------------------------------
