@@ -40,31 +40,40 @@ print("posisition max :",idx_l,";",idx_c)
 print("=> phi =",data_phi[idx_l][idx_c],"; theta =", data_theta[idx_l][idx_c],"[rad]")
 print()
 
-y_ = -data_TE[idx_l][idx_c]   # -> y_ = ê_phi
 x_ = data_TM[idx_l][idx_c]    # -> x_ = ê_theta
+y_ = -data_TE[idx_l][idx_c]   # -> y_ = ê_phi
 
-E_g = (x_ - 1j * y_) / np.sqrt(2)  
-E_d = (x_ + 1j * y_) / np.sqrt(2)
+E_g_max = (x_ - 1j * y_) / np.sqrt(2)  
+E_d_max = (x_ + 1j * y_) / np.sqrt(2)
 
-if (abs(E_g) > abs(E_d)) :  # on choisit la polarisation dominante
+if (abs(E_g_max) > abs(E_d_max)) :  # on choisit la polarisation dominante
     bla = "--> polarisation LHCP"
 else :
     bla = "--> polarisation RCHP"
-    print(abs(E_d))
-print("E_g =", E_g)
-print("E_d =", E_d)
+    
+print("E_g_max =", E_g_max)
+print("E_d_max =", E_d_max)
 print(bla)
 print()
 
 
-# Directivity ----------------------------------------------------------------
+# Directivities --------------------------------------------------------------
 # ============================================================================
 
 
-# Il faut |F|², mais |E|² et |F|² sont = à une constante près
+# Il faut |F|², mais |E|² et |F|² sont = à une constante près.
+# On calcule les directivités selon les polarisation circulaires gauches et 
+# droites, càd le rapport entre l'énergie du champ LHCP/RHCP sur l'énergie totale.
+
+X = data_TM
+Y = -data_TE
+E_g = (X - 1j * Y) / np.sqrt(2) 
+E_d = (X + 1j * Y) / np.sqrt(2)
+E_g_square_norm = abs(E_g)**2
+E_d_square_norm = abs(E_d)**2
 
 Jac = np.sin(data_theta)   # = r² sin(theta), mais r = 1
-integrale_E = 0
+integrale_E = 0            # représente l'énergie totale
 d_phi = 5 * np.pi / 180    # d_phi * d_theta = dS , elem surfacique infinitésimal
 d_theta = 4 * np.pi / 180  # step de 4° et 5° donnés dans énoncé
 
@@ -73,13 +82,15 @@ for i in range(len(data_phi)):
     for j in range(len(data_phi[0])):
         integrale_E += E_square_norm[i][j] * Jac[i][j] * d_phi * d_theta
         
-print("valeur intégrale:",integrale_E)        
-D = 4 * np.pi * E_square_norm / integrale_E
+print("valeur intégrale (énergie totale):",integrale_E)   
+     
+D_tot  = 4 * np.pi * E_square_norm / integrale_E
+D_LHCP = 4 * np.pi * E_g_square_norm / integrale_E
+D_RHCP = 4 * np.pi * E_d_square_norm / integrale_E
 
 
 
-
-# exemple rieman pour intégrer surface sphère :
+# exemple riemann pour intégrer surface sphère :
 def Riemann_surf_sph():
     s = 0
     phi_s = np.arange(0,2*np.pi, 0.001)
@@ -96,31 +107,65 @@ print()
 # Plot D in 3D ---------------------------------------------------------------
 # ============================================================================
 
+# Selon theta et phi:
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
-surf = ax.plot_surface(data_phi, data_theta, D,rstride=1, cstride=1)
+surf = ax.plot_surface(data_phi, data_theta, D_tot,rstride=1, cstride=1)
 plt.title("Directivity versus theta - phi")
+
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(data_phi, data_theta, D_LHCP,rstride=1, cstride=1)
+plt.title("Directivity LHCP versus theta - phi")
+
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(data_phi, data_theta, D_RHCP,rstride=1, cstride=1)
+plt.title("Directivity RHCP versus theta - phi")
 
 # u-v plane (cosine directions)
 
-u = np.cos(data_phi)
-v = np.cos(data_theta)
+#u = np.cos(data_phi)
+#v = np.cos(data_theta)
 
-fig = plt.figure()
-ax = fig.add_subplot(111,projection='3d')
-surf = ax.plot_surface(u, v, D,rstride=1, cstride=1)
-plt.title("Directivity versus u - v ?")
+#fig = plt.figure()
+#ax = fig.add_subplot(111,projection='3d')
+#surf = ax.plot_surface(u, v, D,rstride=1, cstride=1)
+#plt.title("Directivity versus u - v ?")
 
 
-xx=D*np.sin(data_theta)*np.cos(data_phi)
-yy=D*np.sin(data_theta)*np.sin(data_phi)
-zz=D*np.cos(data_theta)
+xx=D_tot*np.sin(data_theta)*np.cos(data_phi)
+yy=D_tot*np.sin(data_theta)*np.sin(data_phi)
+zz=D_tot*np.cos(data_theta)
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
 surf = ax.plot_surface(xx, yy, zz,rstride=1, cstride=1)
-plt.title("Directivity versus xyz")
+plt.title("Directivity versus xyz")   # C CA QUIL FAUT
+
+xx=D_LHCP*np.sin(data_theta)*np.cos(data_phi)
+yy=D_LHCP*np.sin(data_theta)*np.sin(data_phi)
+zz=D_LHCP*np.cos(data_theta)
+
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(xx, yy, zz,rstride=1, cstride=1)
+plt.title("Directivity LHCP versus xyz")   # C CA QUIL FAUT
+
+xx=D_RHCP*np.sin(data_theta)*np.cos(data_phi)
+yy=D_RHCP*np.sin(data_theta)*np.sin(data_phi)
+zz=D_RHCP*np.cos(data_theta)
+
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+color_map = cm.RdYlBu_r
+scalarMap = cm.ScalarMappable(norm=Normalize(vmin=0, vmax=1), cmap=color_map)
+C_colored = scalarMap.to_rgba(D_RHCP)
+surf = ax.plot_surface(xx, yy, zz, rstride=1, cstride=1, facecolors=C_colored)
+
+#surf = ax.plot_surface(xx, yy, zz,rstride=1, cstride=1)
+plt.title("Directivity RCHP versus xyz")   # C CA QUIL FAUT
 
 
 """
@@ -145,19 +190,29 @@ Gr_dB = 10
 
 factor = (lmd / (4 * np.pi * R) )**2
 Gr = 10*np.log(Gr_dB)
-D_u = D[15][18]        # D dans la direction d'observation theta=30° et phi=90°
+D_u = D_LHCP[15][18]        # D dans la direction d'observation theta=30° et phi=90°
+Gt = rad_eff * Pt * D_u
+
+Pav_r = factor * Gr * Gt
+Pr = rad_eff * Pav_r
+print("LHCP")
+print("Puissance disponible au récepteur [mW]:", Pav_r * 10**3)
+print("Puissance reçue [mW]:", Pr * 10**3)
+print()
+
+
+
+factor = (lmd / (4 * np.pi * R) )**2
+Gr = 10*np.log(Gr_dB)
+D_u = D_RHCP[15][18]        # D dans la direction d'observation theta=30° et phi=90°
 Gt = rad_eff * Pt * D_u
 
 Pav_r = factor * Gr * Gt
 Pr = rad_eff * Pav_r
 
+print("RHCP")
 print("Puissance disponible au récepteur [mW]:", Pav_r * 10**3)
 print("Puissance reçue [mW]:", Pr * 10**3)
-
-
-
-
-
 
 
 
