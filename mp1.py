@@ -50,6 +50,7 @@ if (abs(E_g) > abs(E_d)) :  # on choisit la polarisation dominante
     bla = "--> polarisation LHCP"
 else :
     bla = "--> polarisation RCHP"
+    print(abs(E_d))
 print("E_g =", E_g)
 print("E_d =", E_d)
 print(bla)
@@ -89,7 +90,7 @@ def Riemann_surf_sph():
             s += np.sin(theta) * 0.001 * 0.001
     print(s)     
 #Riemann_surf_sph()
-        
+print()     
 
 
 # Plot D in 3D ---------------------------------------------------------------
@@ -120,6 +121,47 @@ fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
 surf = ax.plot_surface(xx, yy, zz,rstride=1, cstride=1)
 plt.title("Directivity versus xyz")
+
+
+"""
+(1) Jsp si le u-v plane est juste
+(2) Jsp comment décomposer la directivité en LHCP et RHCP comme c'est pas
+    un vecteur
+"""
+
+# Link budget ----------------------------------------------------------------
+# ============================================================================
+
+f = 24*10**9
+c = 3*10**8
+lmd = c/f
+R = 100
+rad_eff = 0.8
+Pt = 10**(-3)
+Gr_dB = 10
+
+#print(data_phi[15][18] == np.pi/2)
+#print(data_theta[15][18] == np.pi/6)
+
+factor = (lmd / (4 * np.pi * R) )**2
+Gr = 10*np.log(Gr_dB)
+D_u = D[15][18]        # D dans la direction d'observation theta=30° et phi=90°
+Gt = rad_eff * Pt * D_u
+
+Pav_r = factor * Gr * Gt
+Pr = rad_eff * Pav_r
+
+print("Puissance disponible au récepteur [mW]:", Pav_r * 10**3)
+print("Puissance reçue [mW]:", Pr * 10**3)
+
+
+
+
+
+
+
+
+
 
 
 
