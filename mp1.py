@@ -37,11 +37,14 @@ idx = np.where(E_square_norm == np.amax(E_square_norm))
 idx_l = idx[0][0]
 idx_c = idx[1][0] 
 print("posisition max :",idx_l,";",idx_c)
+print("=> phi =",data_phi[idx_l][idx_c],"; theta =", data_theta[idx_l][idx_c],"[rad]")
+print()
+
 y_ = -data_TE[idx_l][idx_c]   # -> y_ = ê_phi
 x_ = data_TM[idx_l][idx_c]    # -> x_ = ê_theta
 
-E_g = x_ - 1j * y_  # manque le facteur racine(2) !
-E_d = x_ + 1j * y_
+E_g = (x_ - 1j * y_) / np.sqrt(2)  
+E_d = (x_ + 1j * y_) / np.sqrt(2)
 
 if (abs(E_g) > abs(E_d)) :  # on choisit la polarisation dominante
     bla = "--> polarisation LHCP"
@@ -89,19 +92,34 @@ def Riemann_surf_sph():
         
 
 
-# Plot in 3D -----------------------------------------------------------------
+# Plot D in 3D ---------------------------------------------------------------
 # ============================================================================
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
 surf = ax.plot_surface(data_phi, data_theta, D,rstride=1, cstride=1)
 plt.title("Directivity versus theta - phi")
 
+# u-v plane (cosine directions)
+
+u = np.cos(data_phi)
+v = np.cos(data_theta)
+
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(u, v, D,rstride=1, cstride=1)
+plt.title("Directivity versus u - v ?")
 
 
+xx=D*np.sin(data_theta)*np.cos(data_phi)
+yy=D*np.sin(data_theta)*np.sin(data_phi)
+zz=D*np.cos(data_theta)
 
-
-
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(xx, yy, zz,rstride=1, cstride=1)
+plt.title("Directivity versus xyz")
 
 
 
