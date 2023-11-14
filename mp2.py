@@ -28,7 +28,9 @@ chemin_T = 'ton chemin pour accéder aux fichiers renvoyés par le code Matlab'
 # Extraction data ------------------------------------------------------------
 # ============================================================================
 
+
 # Setup le bon chemin pour pas avoir de problèmes avec git
+
 while (True):
     chemin = input("Chemin de A ou T ?  ")
     if (chemin == "A" or chemin == "a"):
@@ -43,14 +45,6 @@ while (True):
         break
     else :
         print("Chemin inexistant, recommencez.")
-
-# Angles theta et phi :
-
-theta = np.arange(1.5, 180 ,180/60)
-theta = theta * np.pi / 180    # [rad]
-
-phi = np.arange(0, 360, 360/80)
-phi = phi * np.pi / 180        # [rad]
 
 # Récupération des paramètres :
     
@@ -75,7 +69,7 @@ with open(chemin+"parameters.txt") as p :
 
 with open(chemin+"errors.txt") as err :    # Verifies that the power fed to 
     errors = err.readlines()               # the input impedance of the antenna
-    errors = errors[0].split("   ")        # corresponds to the radiated power.
+    errors = errors[0].split("  ")         # corresponds to the radiated power.
     
     count_err = 0
     idx_err = []
@@ -113,55 +107,83 @@ print()
 # ============================================================================
 
 
-"""
-Jsp trop comment calculé la directivité.
-- Eske le F d'une antenne correspond à son F quand l'antenne est seule ? Ou 
-  bien le F donné prend déjà en compte l'impact des autres antennes ?
-- Pour obtenir le F total, il faut faire le produit de tous les F ? Ou bien la 
-  somme ?
-- Pour calculer F_tot, esk'il faut d'abord sommer/multiplier tous les F et puis
-  prendre la abs? Ou bien l'inverse ?
-"""
+F_square_norm = real_F**2 + imag_F**2
 
-F = real_F + imag_F * 1j
-F_square_norm = abs(F)**2
+theta = 1.5 + 3 * (idx_theta - 1)
+theta = theta * np.pi / 180 #[rad]
+phi = 4.5 * (idx_phi - 1)
+phi = phi * np.pi / 180     #[rad]
 
 def Riemann(f) :
     """
     Approximation de l'intégrale de f sur la surface d'une sphère 
     de rayon unitaire.
     """
-    Jac = np.sin(theta)   
+    Jac = np.sin(theta[0]* np.pi / 180)   
     integrale = 0              
     d_phi = (360/80) * np.pi / 180    
     d_theta = (180/60) * np.pi / 180  
 
     for i in range(60):       # theta
         for j in range(80):   # phi
-            integrale += f[j + i*80] * Jac[i] * d_phi * d_theta
+            integrale += f[j + i*80] * Jac[j + i*80] * d_phi * d_theta
     
     return integrale
   
-    
 # Directivité pour chaque patterne :
     
-mesh_phi, mesh_theta = np.meshgrid(phi, theta)  
-  
-for i in range(0,params.get("N"),3): # 3 diagrammes par figure
-    fig = plt.figure()
-    for j in range(3):
+D = np.zeros((params.get("N"), 4800))  
+
+for i in range(params.get("N")):
+    D[i] = 4 * np.pi * F_square_norm[i] / Riemann(F_square_norm[i])
     
-        D = 4 * np.pi * F_square_norm[i+j] / Riemann(F_square_norm[i+j])
-        D = D.reshape(60,80)
-        
-        u = D * np.sin(mesh_theta) * np.cos(mesh_phi)
-        v = D * np.sin(mesh_theta) * np.sin(mesh_phi)
-        w = D * np.cos(mesh_theta)
-        
-        sub = "13"+str(j+1)
-        ax = fig.add_subplot(int(sub),projection='3d')
-        surf = ax.plot_surface(u, v, w,rstride=1, cstride=1)
-    plt.title("Directivity versus u-v plane : pattern "+str(i+1)+" - "+str(i+3)) 
+D_dB = 10 * np.log10(D)
+D_max_dB = np.zeros(params.get("N"))
+for i in range(params.get("N")):
+    D_max_dB[i] = D_dB[i].max()
+    
+ZE_max = D_max_dB.max()
+
+
+# Plot u-v plane -------------------------------------------------------------
+# ============================================================================
+
+
+
+F15 = F_square_norm[14].reshape(60,80)
+fig=plt.figure()
+mesh_phi = phi[14].reshape(60,80)
+mesh_theta = theta[14].reshape(60,80)
+
+ax = fig.add_subplot(111,projection='3d')
+surf = ax.plot_surface(mesh_phi, mesh_theta, F15,rstride=1, cstride=1,cmap='viridis')
+plt.title("|F|² of last wire versus (phi , theta)") 
+ax.set_xlabel("phi [Deg°]")
+ax.set_ylabel("theta [Deg°]") 
+#plt.savefig("graphes/F15.svg")
+
+def plot_par_3() : 
+    """
+    Plot la directivité de chaque antenne, 3 graphes par figure.
+    """
+    for i in range(0,params.get("N"),3): # 3 diagrammes par figure
+        fig = plt.figure()
+        count = 0
+        for j in range(3):
+            if (i+j < params.get("N")):
+                count +=1
+                Di = D[i+j].reshape(60,80)
+                
+                u = Di * np.sin(mesh_theta) * np.cos(mesh_phi)
+                v = Di * np.sin(mesh_theta) * np.sin(mesh_phi)
+                w = Di * np.cos(mesh_theta)
+
+                sub = "13"+str(j+1)
+                ax = fig.add_subplot(int(sub),projection='3d')
+                surf = ax.plot_surface(u, v, w,rstride=1, cstride=1)
+        plt.title("Directivity versus u-v plane : patterns "+str(i+1)+" - "+str(i+count)) 
+        #plt.savefig("graphes/mp2_D"+str(i)+".png")
+plot_par_3()
 
 
 # Affichage console ----------------------------------------------------------
@@ -181,5 +203,11 @@ if (count_err > 0):
     for i in idx_err :
         print("Antenne",i,":",errors[i])
     print()
+else:
+    print(" -- 0 errors")
+    print()
     
-    
+for i in range(params.get("N")):
+    print("D max antenne",i+1,"[dB] : ",D_max_dB[i])
+print()
+print("--> Maximum directivity [dB] :",ZE_max)

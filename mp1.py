@@ -96,7 +96,7 @@ w = D_tot * np.cos(data_theta)
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
-surf = ax.plot_surface(u, v, w,rstride=1, cstride=1)
+surf = ax.plot_surface(u, v, w,rstride=1, cstride=1,cmap='viridis')
 plt.title("Directivity versus u-v plane")  
 #plt.savefig("graphes/D_tot.svg") 
 
@@ -108,7 +108,7 @@ w = D_LHCP * np.cos(data_theta)
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
-surf = ax.plot_surface(u, v, w,rstride=1, cstride=1)
+surf = ax.plot_surface(u, v, w,rstride=1, cstride=1,cmap='viridis')
 plt.title("Co-pol directivity versus u-v plane")   
 #plt.savefig("graphes/D_LHCP.svg")
 
@@ -120,7 +120,7 @@ w = D_RHCP * np.cos(data_theta)
 
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
-surf = ax.plot_surface(u, v, w,rstride=1, cstride=1)
+surf = ax.plot_surface(u, v, w,rstride=1, cstride=1,cmap='viridis')
 plt.title("Cross-pol directivity versus u-v plane")   
 #plt.savefig("graphes/D_RHCP.svg")
 
